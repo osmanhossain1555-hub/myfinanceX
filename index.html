@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#1d2258" />
+  <meta name="description" content="Finance X phone-first PWA dashboard" />
+  <title>Finance X</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" href="icons/icon-192.png" />
+  <link rel="apple-touch-icon" href="icons/icon-192.png" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar glass">
+      <div class="brand-wrap">
+        <div class="brand-icon">FX</div>
+        <div>
+          <div class="brand">Finance X</div>
+          <div class="subtle" id="todayLabel"></div>
+        </div>
+      </div>
+      <div class="top-actions">
+        <button class="icon-btn" id="installBtn" hidden title="Install app">⤓</button>
+        <button class="icon-btn" id="themeBtn" title="Theme">◐</button>
+      </div>
+    </header>
+
+    <main class="content">
+      <section class="hero card">
+        <div>
+          <p class="eyebrow">Welcome back</p>
+          <h1>Your money, one screen.</h1>
+          <p class="muted">Track income, expenses, loans, lends, bills, and goals from one phone-first dashboard.</p>
+        </div>
+        <button class="primary-btn" id="openEntryBtn">+ Add entry</button>
+      </section>
+
+      <section class="quick-stats">
+        <article class="stat card">
+          <span class="label">Balance</span>
+          <strong id="balanceValue">$0.00</strong>
+          <small id="balanceSub">0 entries</small>
+        </article>
+        <article class="stat card">
+          <span class="label">Income</span>
+          <strong id="incomeValue">$0.00</strong>
+          <small>This month</small>
+        </article>
+        <article class="stat card">
+          <span class="label">Expense</span>
+          <strong id="expenseValue">$0.00</strong>
+          <small>This month</small>
+        </article>
+        <article class="stat card">
+          <span class="label">Savings Rate</span>
+          <strong id="saveRateValue">0%</strong>
+          <small>Income vs spending</small>
+        </article>
+      </section>
+
+      <section class="panel-grid">
+        <article class="card spending-card">
+          <div class="card-head">
+            <div>
+              <h2>Spending ring</h2>
+              <p class="muted">Needs, wants, savings</p>
+            </div>
+          </div>
+          <div class="ring-area">
+            <div class="donut" id="donutChart">
+              <div class="donut-inner">
+                <span>Spent</span>
+                <strong id="spentTotal">$0</strong>
+              </div>
+            </div>
+            <div class="legend-list" id="legendList"></div>
+          </div>
+        </article>
+
+        <article class="card trend-card">
+          <div class="card-head">
+            <div>
+              <h2>Cashflow trend</h2>
+              <p class="muted">Last 7 days</p>
+            </div>
+          </div>
+          <svg id="trendChart" viewBox="0 0 320 160" preserveAspectRatio="none" aria-label="cashflow chart"></svg>
+          <div class="trend-summary">
+            <div>
+              <span class="label">Net flow</span>
+              <strong id="netFlowValue">$0.00</strong>
+            </div>
+            <div>
+              <span class="label">Entries</span>
+              <strong id="trendCount">0</strong>
+            </div>
+          </div>
+        </article>
+
+        <article class="card bills-card">
+          <div class="card-head">
+            <div>
+              <h2>Upcoming bills</h2>
+              <p class="muted">Next 30 days</p>
+            </div>
+            <button class="secondary-btn" id="openBillBtn">+ Bill</button>
+          </div>
+          <div id="billList" class="stack-list empty-state">No upcoming bills yet.</div>
+        </article>
+
+        <article class="card goals-card">
+          <div class="card-head">
+            <div>
+              <h2>Goal vault</h2>
+              <p class="muted">Track savings goals</p>
+            </div>
+            <button class="secondary-btn" id="openGoalBtn">+ Goal</button>
+          </div>
+          <div id="goalList" class="stack-list empty-state">No goals yet.</div>
+        </article>
+      </section>
+
+      <section class="card ledger-card">
+        <div class="card-head ledger-head">
+          <div>
+            <h2>Recent entries</h2>
+            <p class="muted">Newest first. Stored on your device.</p>
+          </div>
+          <div class="filters">
+            <select id="typeFilter">
+              <option value="all">All types</option>
+              <option value="income">Income</option>
+              <option value="expense">Expense</option>
+              <option value="loan">Loan</option>
+              <option value="lend">Lend</option>
+            </select>
+            <select id="categoryFilter">
+              <option value="all">All categories</option>
+            </select>
+          </div>
+        </div>
+        <div id="entryList" class="entry-list empty-state">No entries yet. Add your first transaction.</div>
+      </section>
+    </main>
+
+    <nav class="bottom-nav glass">
+      <button class="nav-item active">Dashboard</button>
+      <button class="nav-item" id="bottomAddBtn">Add</button>
+      <button class="nav-item" id="exportBtn">Export</button>
+      <button class="nav-item" id="clearBtn">Reset</button>
+    </nav>
+  </div>
+
+  <dialog id="entryDialog" class="modal">
+    <form method="dialog" class="modal-card" id="entryForm">
+      <div class="modal-head">
+        <h3>Add entry</h3>
+        <button class="icon-btn" value="cancel">✕</button>
+      </div>
+      <div class="field-grid">
+        <label>
+          <span>Type</span>
+          <select name="type" required>
+            <option value="income">Income</option>
+            <option value="expense">Expense</option>
+            <option value="loan">Loan</option>
+            <option value="lend">Lend</option>
+          </select>
+        </label>
+        <label>
+          <span>Category</span>
+          <input name="category" placeholder="Salary, Food, Rent" required />
+        </label>
+        <label>
+          <span>Amount</span>
+          <input name="amount" type="number" min="0" step="0.01" placeholder="0.00" required />
+        </label>
+        <label>
+          <span>Date</span>
+          <input name="date" type="date" required />
+        </label>
+        <label class="full">
+          <span>Note</span>
+          <input name="note" placeholder="Optional note" />
+        </label>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="secondary-btn" id="cancelEntry">Cancel</button>
+        <button type="submit" class="primary-btn">Save entry</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="billDialog" class="modal">
+    <form method="dialog" class="modal-card" id="billForm">
+      <div class="modal-head">
+        <h3>Add bill</h3>
+        <button class="icon-btn" value="cancel">✕</button>
+      </div>
+      <div class="field-grid">
+        <label>
+          <span>Name</span>
+          <input name="name" required placeholder="Rent" />
+        </label>
+        <label>
+          <span>Amount</span>
+          <input name="amount" type="number" min="0" step="0.01" required />
+        </label>
+        <label class="full">
+          <span>Due date</span>
+          <input name="dueDate" type="date" required />
+        </label>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="secondary-btn" id="cancelBill">Cancel</button>
+        <button type="submit" class="primary-btn">Save bill</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="goalDialog" class="modal">
+    <form method="dialog" class="modal-card" id="goalForm">
+      <div class="modal-head">
+        <h3>Add goal</h3>
+        <button class="icon-btn" value="cancel">✕</button>
+      </div>
+      <div class="field-grid">
+        <label>
+          <span>Name</span>
+          <input name="name" required placeholder="Emergency fund" />
+        </label>
+        <label>
+          <span>Target amount</span>
+          <input name="target" type="number" min="0" step="0.01" required />
+        </label>
+        <label>
+          <span>Saved amount</span>
+          <input name="saved" type="number" min="0" step="0.01" required />
+        </label>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="secondary-btn" id="cancelGoal">Cancel</button>
+        <button type="submit" class="primary-btn">Save goal</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="app.js"></script>
+</body>
+</html>
